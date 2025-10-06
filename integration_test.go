@@ -4,13 +4,31 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/zylisp/repl/client"
-	"github.com/zylisp/repl/server"
+	"github.com/zylisp/lang/interpreter"
 )
 
+// setupTestEnv creates a fresh test environment
+func setupTestEnv(t *testing.T) *interpreter.Env {
+	t.Helper()
+	env := interpreter.NewEnv(nil)
+	interpreter.LoadPrimitives(env)
+	return env
+}
+
+// evalTestCode evaluates code in the given environment
+func evalTestCode(t *testing.T, env *interpreter.Env, code string) string {
+	t.Helper()
+
+	result, _, err := evaluateZylispWithEnv(env, code)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	return formatValue(result)
+}
+
 func TestIntegrationBasic(t *testing.T) {
-	srv := server.NewServer()
-	cli := client.NewClient(srv)
+	env := setupTestEnv(t)
 
 	tests := []struct {
 		name     string
@@ -26,10 +44,7 @@ func TestIntegrationBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := cli.Send(tt.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			result := evalTestCode(t, env, tt.input)
 
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
@@ -39,8 +54,7 @@ func TestIntegrationBasic(t *testing.T) {
 }
 
 func TestIntegrationStateful(t *testing.T) {
-	srv := server.NewServer()
-	cli := client.NewClient(srv)
+	env := setupTestEnv(t)
 
 	steps := []struct {
 		input    string
@@ -56,10 +70,7 @@ func TestIntegrationStateful(t *testing.T) {
 	}
 
 	for i, step := range steps {
-		result, err := cli.Send(step.input)
-		if err != nil {
-			t.Fatalf("step %d error: %v", i, err)
-		}
+		result := evalTestCode(t, env, step.input)
 
 		if result != step.expected {
 			t.Errorf("step %d: got %q, want %q", i, result, step.expected)
@@ -68,8 +79,7 @@ func TestIntegrationStateful(t *testing.T) {
 }
 
 func TestIntegrationFactorial(t *testing.T) {
-	srv := server.NewServer()
-	cli := client.NewClient(srv)
+	env := setupTestEnv(t)
 
 	// Define factorial function
 	factorialDef := `
@@ -80,10 +90,7 @@ func TestIntegrationFactorial(t *testing.T) {
                 (* n (factorial (- n 1))))))
     `
 
-	_, err := cli.Send(factorialDef)
-	if err != nil {
-		t.Fatalf("define factorial error: %v", err)
-	}
+	_ = evalTestCode(t, env, factorialDef)
 
 	tests := []struct {
 		n        int
@@ -97,10 +104,7 @@ func TestIntegrationFactorial(t *testing.T) {
 
 	for _, tt := range tests {
 		input := fmt.Sprintf("(factorial %d)", tt.n)
-		result, err := cli.Send(input)
-		if err != nil {
-			t.Fatalf("factorial(%d) error: %v", tt.n, err)
-		}
+		result := evalTestCode(t, env, input)
 
 		if result != tt.expected {
 			t.Errorf("factorial(%d): got %q, want %q", tt.n, result, tt.expected)
@@ -109,8 +113,7 @@ func TestIntegrationFactorial(t *testing.T) {
 }
 
 func TestIntegrationListProcessing(t *testing.T) {
-	srv := server.NewServer()
-	cli := client.NewClient(srv)
+	env := setupTestEnv(t)
 
 	// Define sum function
 	sumDef := `
@@ -121,15 +124,9 @@ func TestIntegrationListProcessing(t *testing.T) {
                 (+ (car lst) (sum (cdr lst))))))
     `
 
-	_, err := cli.Send(sumDef)
-	if err != nil {
-		t.Fatalf("define sum error: %v", err)
-	}
+	_ = evalTestCode(t, env, sumDef)
 
-	result, err := cli.Send("(sum (list 1 2 3 4 5))")
-	if err != nil {
-		t.Fatalf("sum error: %v", err)
-	}
+	result := evalTestCode(t, env, "(sum (list 1 2 3 4 5))")
 
 	if result != "15" {
 		t.Errorf("sum: got %q, want \"15\"", result)

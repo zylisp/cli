@@ -2,3 +2,5 @@ github.com/zylisp/lang v0.0.0-20251006061322-3f8b0b8fcf07 h1:u0G9A4v9mPiBClmAZeR
 github.com/zylisp/lang v0.0.0-20251006061322-3f8b0b8fcf07/go.mod h1:1i3EAc8IRbLItzCzE99GNrQRKFgsSedYonrs5R2g8hg=
 github.com/zylisp/repl v0.0.0-20251006062007-c81ad23996c7 h1:eYCFu6k7wYQZEL0vn+OsWZMETvlvR71GuAeFVUzdzic=
 github.com/zylisp/repl v0.0.0-20251006062007-c81ad23996c7/go.mod h1:3UpMrbpkHGR0yGgO8QjM8Jh/raw+gdv/4OD8VfD7yhE=
+github.com/zylisp/repl v0.0.0-20251006221813-609e2f5375fb h1:y0JKE5rFKcK/sT+w0SNWTOn/N9MVUUCmDOp2Vghl1YM=
+github.com/zylisp/repl v0.0.0-20251006221813-609e2f5375fb/go.mod h1:3UpMrbpkHGR0yGgO8QjM8Jh/raw+gdv/4OD8VfD7yhE=
