@@ -99,7 +99,7 @@ func handleCommand(line string, cli *client.Client) bool {
 }
 
 func showHelp() {
-	fmt.Println(`
+	fmt.Print(`
 Available Commands:
   exit, quit    - Exit the REPL
   :reset        - Reset the environment
