@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/zylisp/cli/pkg/cli"
+	"github.com/zylisp/cli/pkg/eval"
 	"github.com/zylisp/lang/interpreter"
 )
 
@@ -19,12 +21,12 @@ func setupTestEnv(t *testing.T) *interpreter.Env {
 func evalTestCode(t *testing.T, env *interpreter.Env, code string) string {
 	t.Helper()
 
-	result, _, err := evaluateZylispWithEnv(env, code)
+	result, _, err := eval.EvaluateWithEnv(env, code)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	return formatValue(result)
+	return cli.FormatValue(result)
 }
 
 func TestIntegrationBasic(t *testing.T) {
