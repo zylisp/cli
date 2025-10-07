@@ -16,6 +16,7 @@ var (
 	transport = flag.String("transport", "in-process", "Transport: 'in-process', 'unix', or 'tcp'")
 	addr      = flag.String("addr", "", "Server address (for server/client modes)")
 	codec     = flag.String("codec", "json", "Codec: 'json' or 'msgpack'")
+	prompt    = flag.String("prompt", "ZYLISP> ", "REPL prompt ('alt' for 'raskr> ')")
 )
 
 func main() {
@@ -41,6 +42,7 @@ func main() {
 		Transport: *transport,
 		Addr:      *addr,
 		Codec:     *codec,
+		Prompt:    *prompt,
 	}
 
 	// Run the CLI application

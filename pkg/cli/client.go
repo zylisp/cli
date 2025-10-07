@@ -8,7 +8,7 @@ import (
 )
 
 // RunClient connects to a remote REPL server and starts a REPL loop.
-func RunClient(ctx context.Context, addr string) error {
+func RunClient(ctx context.Context, addr string, promptFlag string) error {
 	if addr == "" {
 		return fmt.Errorf("--addr required in client mode")
 	}
@@ -25,5 +25,6 @@ func RunClient(ctx context.Context, addr string) error {
 	fmt.Println("Connected!")
 
 	// Run REPL loop
-	return ReplLoop(ctx, client)
+	prompt := getPrompt(promptFlag)
+	return ReplLoop(ctx, client, prompt)
 }

@@ -1,23 +1,60 @@
 package cli
 
 import (
-	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/chzyer/readline"
 	"github.com/zylisp/cli/pkg/eval"
 	"github.com/zylisp/repl"
 )
 
+// getPrompt resolves the prompt string, handling special cases.
+func getPrompt(promptFlag string) string {
+	if promptFlag == "alt" {
+		return "raskr> "
+	}
+	return promptFlag
+}
+
+// createReadline creates a readline instance with history support.
+func createReadline(prompt string) (*readline.Instance, error) {
+	// Get home directory for history file
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = "."
+	}
+	historyFile := filepath.Join(homeDir, ".zylisp_history")
+
+	// Create readline config
+	config := &readline.Config{
+		Prompt:          prompt,
+		HistoryFile:     historyFile,
+		InterruptPrompt: "^C",
+		EOFPrompt:       "exit",
+	}
+
+	return readline.NewEx(config)
+}
+
 // SimpleReplLoop runs a simple REPL without client/server separation.
 // This is used for local mode where evaluation happens directly.
-func SimpleReplLoop(ctx context.Context) error {
+func SimpleReplLoop(ctx context.Context, prompt string) error {
 	fmt.Print(Banner)
 
-	scanner := bufio.NewScanner(os.Stdin)
+	// Create readline instance
+	rl, err := createReadline(prompt)
+	if err != nil {
+		return fmt.Errorf("failed to create readline: %w", err)
+	}
+	defer rl.Close()
+
+	evaluator := eval.Evaluator()
 
 	for {
 		select {
@@ -26,13 +63,20 @@ func SimpleReplLoop(ctx context.Context) error {
 		default:
 		}
 
-		fmt.Print("> ")
-
-		if !scanner.Scan() {
-			break
+		// Read line with readline
+		line, err := rl.Readline()
+		if err != nil {
+			if err == readline.ErrInterrupt {
+				// Ctrl-C pressed
+				continue
+			} else if err == io.EOF {
+				// Ctrl-D or EOF
+				break
+			}
+			return fmt.Errorf("readline error: %w", err)
 		}
 
-		line := strings.TrimSpace(scanner.Text())
+		line = strings.TrimSpace(line)
 
 		if line == "" {
 			continue
@@ -48,7 +92,6 @@ func SimpleReplLoop(ctx context.Context) error {
 		}
 
 		// Evaluate expression directly
-		evaluator := eval.Evaluator()
 		result, output, err := evaluator(line)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
@@ -64,19 +107,20 @@ func SimpleReplLoop(ctx context.Context) error {
 		fmt.Println(FormatValue(result))
 	}
 
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("scanner error: %w", err)
-	}
-
 	return nil
 }
 
 // ReplLoop runs the REPL loop with a connected client.
 // This is used for client mode where evaluation happens via protocol.
-func ReplLoop(ctx context.Context, client repl.Client) error {
+func ReplLoop(ctx context.Context, client repl.Client, prompt string) error {
 	fmt.Print(Banner)
 
-	scanner := bufio.NewScanner(os.Stdin)
+	// Create readline instance
+	rl, err := createReadline(prompt)
+	if err != nil {
+		return fmt.Errorf("failed to create readline: %w", err)
+	}
+	defer rl.Close()
 
 	for {
 		select {
@@ -85,13 +129,20 @@ func ReplLoop(ctx context.Context, client repl.Client) error {
 		default:
 		}
 
-		fmt.Print("> ")
-
-		if !scanner.Scan() {
-			break
+		// Read line with readline
+		line, err := rl.Readline()
+		if err != nil {
+			if err == readline.ErrInterrupt {
+				// Ctrl-C pressed
+				continue
+			} else if err == io.EOF {
+				// Ctrl-D or EOF
+				break
+			}
+			return fmt.Errorf("readline error: %w", err)
 		}
 
-		line := strings.TrimSpace(scanner.Text())
+		line = strings.TrimSpace(line)
 
 		if line == "" {
 			continue
@@ -128,10 +179,6 @@ func ReplLoop(ctx context.Context, client repl.Client) error {
 		fmt.Println(FormatValue(result.Value))
 	}
 
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("scanner error: %w", err)
-	}
-
 	return nil
 }
 
@@ -142,7 +189,7 @@ func ReplLoop(ctx context.Context, client repl.Client) error {
 func handleCommand(line string) (handled bool, shouldExit bool) {
 	switch line {
 	case "(quit)", "(q)":
-		fmt.Println("\nGoodbye!")
+		fmt.Println("\n\nSee you at RAGNARǪK!!\n")
 		return true, true
 
 	case "(reset)":

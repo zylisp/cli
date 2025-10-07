@@ -10,7 +10,7 @@ import (
 )
 
 // RunLocal runs the REPL in local mode (in-process server/client).
-func RunLocal(ctx context.Context) error {
+func RunLocal(ctx context.Context, promptFlag string) error {
 	// Create in-process server
 	config := repl.ServerConfig{
 		Transport: "in-process",
@@ -35,5 +35,6 @@ func RunLocal(ctx context.Context) error {
 	// For in-process mode, we need to use the in-process transport directly
 	// since the universal client doesn't support in-process yet.
 	// Instead, we run a simple REPL loop directly
-	return SimpleReplLoop(ctx)
+	prompt := getPrompt(promptFlag)
+	return SimpleReplLoop(ctx, prompt)
 }
