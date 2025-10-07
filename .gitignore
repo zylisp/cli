@@ -34,5 +34,5 @@ go.work.sum
 
 # Build artefacts
 bin
-zylisp
-zyc
+/zylisp
+/zyc
